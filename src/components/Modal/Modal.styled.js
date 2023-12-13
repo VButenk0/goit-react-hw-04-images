@@ -15,8 +15,11 @@ export const ModalWrapper = styled.div`
 `;
 
 export const ModalContent = styled.div`
-  max-width: calc(100vw - 48px);
-  max-height: calc(100vh - 24px);
+  max-width: 80vw;
+  max-height: 80vw;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 2px 2px 8px black;
 `;
 
 export const ModalImg = styled.img`

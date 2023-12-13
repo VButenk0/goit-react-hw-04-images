@@ -10,6 +10,7 @@
     "axios": "^1.6.2",
     "css.gg": "^2.1.1",
     "nanoid": "^5.0.4",
+    "notiflix": "^3.2.6",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-loader-spinner": "^6.1.0",

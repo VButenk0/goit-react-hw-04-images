@@ -27,6 +27,7 @@ export const StyledButton = styled.button`
 export const StyledInput = styled.input`
   background-color: transparent;
   border: none;
+  width: 100%;
 
   &:focus {
     outline: none;

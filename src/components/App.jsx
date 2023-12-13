@@ -1,100 +1,83 @@
-import { Component } from 'react';
-import { Searchbar } from './Searchbar/Searchbar';
+import { useState, useCallback, useEffect } from 'react';
+import Searchbar from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { getPhotoByQuery } from 'API/API';
 import { Loader } from './Loader/Loader';
 import Modal from './Modal/Modal';
+import { Notify } from 'notiflix';
 
-export class App extends Component {
-  state = {
-    images: [],
-    isLoading: false,
-    isShowLoadMore: false,
-    isOpenModal: false,
-    currentImg: null,
-    isNewSearch: false,
+const PER_PAGE = 12;
 
-    q: '',
-    page: 1,
-    per_page: 12,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isShowLoadMore, setIsShowLoadMore] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [currentImg, setCurrentImg] = useState(null);
+  const [isNewSearch, setIsNewSearch] = useState(false);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
 
-  componentDidMount() {}
+  const getDataFromApi = useCallback(
+    async query => {
+      try {
+        setIsLoading(true);
+        !query &&
+          Notify.failure(
+            `No results for ${query}.
+            But look at these random images!`
+          );
+        const { hits } = await getPhotoByQuery(query, page, PER_PAGE);
 
-  componentDidUpdate(_, prevState) {
-    if (
-      (prevState.page !== this.state.page || this.state.isNewSearch) &&
-      !this.state.isLoading
-    ) {
-      this.getDataFromApi();
-    }
-  }
-
-  getDataFromApi = async () => {
-    const { q, page, per_page } = this.state;
-    try {
-      this.setState({
-        isLoading: true,
-        isShowLoadMore: true,
-        isNewSearch: false,
-      });
-      const { hits } = await getPhotoByQuery(q, page, per_page);
-      if (hits.length < 12) {
-        this.setState({
-          isShowLoadMore: false,
-        });
+        hits.length < 12 ? setIsShowLoadMore(false) : setIsShowLoadMore(true);
+        page > 1 ? setImages(prev => [...prev, ...hits]) : setImages(hits);
+      } catch (error) {
+        Notify.failure(error.message);
+      } finally {
+        setIsLoading(false);
+        setIsNewSearch(false);
       }
-      this.setState(prev => ({ images: [...prev.images, ...hits] }));
-    } catch (error) {
-      alert(error.response.data);
-    } finally {
-      this.setState({ isLoading: false });
+    },
+    [page]
+  );
+
+  useEffect(() => {
+    if (isNewSearch) {
+      getDataFromApi(query);
+      console.log('Запит по значенню');
+    } else if (page > 1) {
+      getDataFromApi(query);
+      console.log('Запит на ще 12 картинок');
     }
+  }, [getDataFromApi, query, isNewSearch, page]);
+
+  const onSubmit = query => {
+    setQuery(query);
+    setPage(1);
+    setIsNewSearch(true);
   };
 
-  handleChangeQuery = e => {
-    this.setState({ q: e.target.value });
+  const incrementPage = () => {
+    setPage(prev => prev + 1);
   };
 
-  handleSubmit = e => {
-    e.preventDefault();
-    this.setState(() => ({ images: [], page: 1, isNewSearch: true }));
+  const handleToggleModal = () => {
+    setIsOpenModal(!isOpenModal);
   };
 
-  incrementPage = () => {
-    this.setState(prev => ({ page: prev.page + 1 }));
+  const handleClickImg = image => {
+    setCurrentImg(image);
+    setIsOpenModal(true);
   };
 
-  handleToggleModal = () => {
-    this.setState(prev => ({ isOpenModal: !prev.isOpenModal }));
-  };
-
-  handleClickImg = image => {
-    this.setState({ currentImg: image, isOpenModal: true });
-  };
-
-  render() {
-    const { images, isLoading, isShowLoadMore, isOpenModal } = this.state;
-
-    return (
-      <>
-        <Searchbar
-          handleChangeQuery={this.handleChangeQuery}
-          handleSubmit={this.handleSubmit}
-        />
-        <ImageGallery handleClickImg={this.handleClickImg} images={images} />
-        {isLoading && <Loader />}
-        {isShowLoadMore && !isLoading && (
-          <Button onClick={this.incrementPage} />
-        )}
-        {isOpenModal && (
-          <Modal
-            {...this.state.currentImg}
-            closeModal={this.handleToggleModal}
-          />
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery handleClickImg={handleClickImg} images={images} />
+      {isLoading && <Loader />}
+      {isShowLoadMore && !isLoading && <Button onClick={incrementPage} />}
+      {isOpenModal && <Modal {...currentImg} closeModal={handleToggleModal} />}
+    </>
+  );
+};

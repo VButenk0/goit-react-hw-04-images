@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   StyledHeader,
   StyledForm,
@@ -6,7 +7,29 @@ import {
   StyledInput,
 } from './Searchbar.styled';
 
-export const Searchbar = ({ handleChangeQuery, handleSubmit }) => {
+const Searchbar = ({ onSubmit }) => {
+  const [query, setQuery] = useState('');
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    onSubmit(query);
+  };
+
+  const handleChange = ({ target: { value } }) => {
+    setQuery(value);
+  };
+
+  // const handleChangeQuery = e => {
+  //   setQuery(e.target.value);
+  // };
+
+  // const handleSubmit = e => {
+  //   e.preventDefault();
+  //   setImages([]);
+  //   setPage(1);
+  //   setIsNewSearch(true);
+  // };
+
   return (
     <StyledHeader>
       <StyledForm onSubmit={handleSubmit}>
@@ -15,7 +38,7 @@ export const Searchbar = ({ handleChangeQuery, handleSubmit }) => {
         </StyledButton>
 
         <StyledInput
-          onChange={handleChangeQuery}
+          onChange={handleChange}
           type="text"
           autoComplete="off"
           autoFocus
@@ -25,3 +48,4 @@ export const Searchbar = ({ handleChangeQuery, handleSubmit }) => {
     </StyledHeader>
   );
 };
+export default Searchbar;
