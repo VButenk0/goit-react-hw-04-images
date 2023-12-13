@@ -31,6 +31,7 @@ export const App = () => {
 
       if (!hits.length) {
         setImages([]);
+        setIsShowLoadMore(false);
         return Notify.failure(
           `No results for ${query}.
             But look at these random images!`
