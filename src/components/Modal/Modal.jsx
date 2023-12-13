@@ -1,41 +1,37 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import { ModalWrapper, ModalContent } from './Modal.styled';
 
-class Modal extends Component {
-  componentDidMount() {
-    document.addEventListener('keydown', this.handleKeyDown);
+const Modal = ({ largeImageURL, tags, closeModal }) => {
+  useEffect(() => {
+    const handleKeyDown = e => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
 
+    document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
-  }
 
-  componentWillUnmount() {
-    document.body.style.overflow = 'visible';
+    return () => {
+      document.body.style.overflow = 'visible';
 
-    document.removeEventListener('keydown', this.handleKeyDown);
-  }
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeModal]);
 
-  handleBackdropClick = e => {
+  const handleBackdropClick = e => {
     if (e.target === e.currentTarget) {
-      this.props.closeModal();
+      closeModal();
     }
   };
 
-  handleKeyDown = e => {
-    if (e.key === 'Escape') {
-      this.props.closeModal();
-    }
-  };
-
-  render() {
-    const { largeImageURL, tags } = this.props;
-    return (
-      <ModalWrapper onClick={this.handleBackdropClick}>
-        <ModalContent>
-          <img src={largeImageURL} alt={tags} />
-        </ModalContent>
-      </ModalWrapper>
-    );
-  }
-}
+  return (
+    <ModalWrapper onClick={handleBackdropClick}>
+      <ModalContent>
+        <img src={largeImageURL} alt={tags} />
+      </ModalContent>
+    </ModalWrapper>
+  );
+};
 
 export default Modal;

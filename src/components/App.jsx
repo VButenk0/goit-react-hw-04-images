@@ -15,47 +15,45 @@ export const App = () => {
   const [isShowLoadMore, setIsShowLoadMore] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [currentImg, setCurrentImg] = useState(null);
-  const [isNewSearch, setIsNewSearch] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  const getDataFromApi = useCallback(
-    async query => {
-      try {
-        setIsLoading(true);
-        !query &&
-          Notify.failure(
-            `No results for ${query}.
-            But look at these random images!`
-          );
-        const { hits } = await getPhotoByQuery(query, page, PER_PAGE);
+  const getDataFromApi = useCallback(async () => {
+    try {
+      setIsLoading(true);
 
-        hits.length < 12 ? setIsShowLoadMore(false) : setIsShowLoadMore(true);
-        page > 1 ? setImages(prev => [...prev, ...hits]) : setImages(hits);
-      } catch (error) {
-        Notify.failure(error.message);
-      } finally {
-        setIsLoading(false);
-        setIsNewSearch(false);
+      if (query === '') {
+        setIsShowLoadMore(false);
+        return;
       }
-    },
-    [page]
-  );
+
+      const { hits } = await getPhotoByQuery(query, page, PER_PAGE);
+
+      if (!hits.length) {
+        setImages([]);
+        return Notify.failure(
+          `No results for ${query}.
+            But look at these random images!`
+        );
+      }
+
+      hits.length < 12 ? setIsShowLoadMore(false) : setIsShowLoadMore(true);
+
+      page > 1 ? setImages(prev => [...prev, ...hits]) : setImages(hits);
+    } catch (error) {
+      Notify.failure(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [query, page]);
 
   useEffect(() => {
-    if (isNewSearch) {
-      getDataFromApi(query);
-      console.log('Запит по значенню');
-    } else if (page > 1) {
-      getDataFromApi(query);
-      console.log('Запит на ще 12 картинок');
-    }
-  }, [getDataFromApi, query, isNewSearch, page]);
+    getDataFromApi();
+  }, [getDataFromApi]);
 
   const onSubmit = query => {
     setQuery(query);
     setPage(1);
-    setIsNewSearch(true);
   };
 
   const incrementPage = () => {
